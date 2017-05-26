@@ -19,20 +19,20 @@ $.getJSON(`/posts.json?tags=id:${postIds.join(",")}`).done(
 		function (json) {
 			var favedPosts = getObjectsIndexOf(json, 'fav_string', 'fav:' + userId);
 			var favedIds = getValues(favedPosts, 'id');
-			markPosts(favedIds);
+			fadePosts(favedIds);
 		}
 
 );
 
-function markPosts(favedIds) {
+function fadePosts(favedIds) {
 	var i, len;
 	for (var i = 0, len = favedIds.length; i < len; i++) {
 		$('#post_' + favedIds[i]).fadeTo("slow", 0.15);
 		$('document').ready(function() {
 			$('#post_' + favedIds[i]).hover(function() {
-				$(this).fadeTo("slow", 1);
+				$(this).fadeTo(0, 1);
 				}, function() {
-				$(this).fadeTo("slow", 0.15);
+				$(this).fadeTo(0, 0.15);
 			});
 		});
 	}
