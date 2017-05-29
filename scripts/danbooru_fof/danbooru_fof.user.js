@@ -6,12 +6,12 @@
 // @include      http*://*.donmai.us/posts*
 // @include      http*://*.donmai.us/explore*
 // @include      http*://*.donmai.us/
-// @version      2017-05-27T21:40:55Z
+// @version      2017-05-29T18:06:56Z
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
 
-var logging = true;
+var logging = false;
 
 var userName = $("meta[name='current-user-name']").attr("content");
 if (logging) {console.log("userName:", userName)};
@@ -24,7 +24,7 @@ if (document.title.indexOf("fav:" + userName) === -1) {
 	var postIds = $(".post-preview").map((i, post) => $(post).data("id")).toArray();
 	if (logging) {console.log("postIds:", postIds)};
 
-	$.getJSON(`/posts.json?tags=id:${postIds.join(",")}`).done(
+	$.getJSON(`/posts.json?tags=status:any+id:${postIds.join(",")}`).done(
 			function (json) {
 				if (logging) {console.log("json:", json)};
 				var favedPosts = getObjects(json, "fav_string", "fav:" + userId);
