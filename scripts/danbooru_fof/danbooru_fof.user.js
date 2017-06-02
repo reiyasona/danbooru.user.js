@@ -6,48 +6,73 @@
 // @include      http*://*.donmai.us/posts*
 // @include      http*://*.donmai.us/explore*
 // @include      http*://*.donmai.us/
-// @version      2017-05-29T18:06:56Z
+// @version      2017-06-02T00:53:30Z
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
 
-var logging = false;
+var useJSON = false;
 
 var userName = $("meta[name='current-user-name']").attr("content");
-if (logging) {console.log("userName:", userName)};
-
-var userId = $("meta[name='current-user-id']").attr("content");
-if (logging) {console.log("userId:", userId)};
+console.log("userName:", userName);
 
 if (document.title.indexOf("fav:" + userName) === -1) {
 
+	var userId = $("meta[name='current-user-id']").attr("content");
+	console.log("userId:", userId);
+
 	var postIds = $(".post-preview").map((i, post) => $(post).data("id")).toArray();
-	if (logging) {console.log("postIds:", postIds)};
+	console.log("postIds:", postIds);
 
-	$.getJSON(`/posts.json?tags=status:any+id:${postIds.join(",")}`).done(
-			function (json) {
-				if (logging) {console.log("json:", json)};
-				var favedPosts = getObjects(json, "fav_string", "fav:" + userId);
-				if (logging) {console.log("favedPosts:", favedPosts)};
-				var favedIds = getValues(favedPosts, "id");
-				if (logging) {console.log("favedIds:", favedIds)};
-				fadePosts(favedIds);
-			}
+	var favedPostIds = [];
+
+	switch (useJSON) {
+		case true:
+		collectFavedPostsJson().then(function(){ fadePosts(); });
+		break;
+		default:
+		collectFavedPostsHtml();
+		fadePosts();
+	}
+}
+
+function collectFavedPostsHtml() {
+	var postFavStatuses = $(".post-preview").map((i, postFavStatuses) => $(postFavStatuses).data("is-favorited")).toArray();
+	console.log("postFavStatuses:", postFavStatuses);
+
+	for (var i = 0, len = postIds.length; i < len; i++) {
+		if (postFavStatuses[i]) {
+			favedPostIds.push(postIds[i]);
+		}
+	}
+	console.log("favedPostIds:", favedPostIds);
+}
+
+function collectFavedPostsJson() {
+	return $.getJSON(`/posts.json?tags=status:any+id:${postIds.join(",")}`).done(
+		function (postsJson) {
+			console.log("postsJson:", postsJson);
+
+			var favedPostsJson = getObjects(postsJson, "fav_string", "fav:" + userId);
+			console.log("favedPostsJson:", favedPostsJson);
+
+			favedPostIds = getValues(favedPostsJson, "id");
+			console.log("favedPostIds:", favedPostIds);
+		}
 	);
-};
+}
 
-function fadePosts(favedIds) {
+function fadePosts() {
 	var i, len;
-	for (var i = 0, len = favedIds.length; i < len; i++) {
-		$("#post_" + favedIds[i]).fadeTo("slow", 0.15);
+	for (var i = 0, len = favedPostIds.length; i < len; i++) {
+		$("#post_" + favedPostIds[i]).fadeTo("slow", 0.15);
 		$("document").ready(function() {
-			$("#post_" + favedIds[i]).hover(function() {
+			$("#post_" + favedPostIds[i]).hover(function() {
 				$(this).fadeTo(0, 1);
 				}, function() {
 				$(this).fadeTo(0, 0.15);
 			});
 		});
-		if (logging) {console.log("favedIds[" + i + "]:", favedIds[i])};
 	}
 }
 
