@@ -66,12 +66,10 @@ function fadePosts() {
 	var i, len;
 	for (var i = 0, len = favedPostIds.length; i < len; i++) {
 		$("#post_" + favedPostIds[i]).fadeTo("slow", 0.15);
-		$("document").ready(function() {
-			$("#post_" + favedPostIds[i]).hover(function() {
-				$(this).fadeTo(0, 1);
-				}, function() {
-				$(this).fadeTo(0, 0.15);
-			});
+		$("#post_" + favedPostIds[i]).hover(function() {
+			$(this).fadeTo(0, 1);
+			}, function() {
+			$(this).fadeTo(0, 0.15);
 		});
 	}
 }
