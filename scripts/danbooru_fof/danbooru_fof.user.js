@@ -6,19 +6,19 @@
 // @include      http*://*.donmai.us/posts*
 // @include      http*://*.donmai.us/explore*
 // @include      http*://*.donmai.us/
-// @version      2018-05-09T02:25:26Z
+// @version      2019-11-07T20:37:27Z
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
 
 var useJSON = false;
 
-var userName = $("meta[name='current-user-name']").attr("content");
+var userName = $("body").attr("data-user-name");
 console.log("userName:", userName);
 
 if (document.title.indexOf("fav:" + userName) === -1) {
 
-	var userId = $("meta[name='current-user-id']").attr("content");
+	var userId = $("body").attr("data-user-id");
 	console.log("userId:", userId);
 
 	var postIds = $(".post-preview").map((i, post) => $(post).data("id")).toArray();
