@@ -6,40 +6,48 @@
 // @include      http*://*.donmai.us/posts*
 // @include      http*://*.donmai.us/explore*
 // @include      http*://*.donmai.us/
-// @version      2020-03-18T23:54:59Z
+// @version      2021-01-06T06:08:36Z
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
 
-var useJSON = false;
+var userId = $("body").attr("data-current-user-id");
+console.log("userId:", userId);
 
-var userName = $("body").attr("data-current-user-name").toLowerCase();
-console.log("userName:", userName);
-
-if (document.title.toLowerCase().indexOf("fav:" + userName) === -1) {
-
-	var userId = $("body").attr("data-current-user-id");
-	console.log("userId:", userId);
-
-	var postIds = $(".post-preview").map((i, post) => $(post).data("id")).toArray();
-	console.log("postIds:", postIds);
-
-	var favedPostIds = [];
-
-	switch (useJSON) {
-		case true:
-		collectFavedPostsJson().then(function(){ fadePosts(); });
-		break;
-		default:
-		collectFavedPostsHtml();
-		fadePosts();
+if (userId !== "null") {
+	
+	var userName = $("body").attr("data-current-user-name").toLowerCase();
+	console.log("userName:", userName);
+	
+	if (document.title.toLowerCase().indexOf("fav:" + userName) === -1) {
+		
+		var postIds = $(".post-preview").map((i, post) => $(post).data("id")).toArray();
+		console.log("postIds:", postIds);
+		
+		var favedPostIds = [];
+		
+		var useHtml = false;
+		console.log("useHtml:", useHtml);
+		
+		switch (useHtml) {
+			case true:
+			console.log("Using HTML mode! [DEPRECATED: https://github.com/danbooru/danbooru/issues/4652#issuecomment-754993802]");
+			collectFavedPostsHtml();
+			fadePosts();
+			break;
+			default:
+			console.log("Using JSON mode!");
+			collectFavedPostsJson().then(function(){ fadePosts(); });
+		}
 	}
+} else {
+	console.log("The User ID is null! User not logged in?");
 }
 
 function collectFavedPostsHtml() {
 	var postFavStatuses = $(".post-preview").map((i, postFavStatuses) => $(postFavStatuses).data("is-favorited")).toArray();
 	console.log("postFavStatuses:", postFavStatuses);
-
+	
 	for (var i = 0, len = postIds.length; i < len; i++) {
 		if (postFavStatuses[i]) {
 			favedPostIds.push(postIds[i]);
@@ -49,14 +57,11 @@ function collectFavedPostsHtml() {
 }
 
 function collectFavedPostsJson() {
-	return $.getJSON(`/posts.json?tags=status:any+id:${postIds.join(",")}`).done(
-		function (postsJson) {
-			console.log("postsJson:", postsJson);
-
-			var favedPostsJson = getObjects(postsJson, "fav_string", "fav:" + userId);
+	return $.getJSON(`/favorites.json?search[post_id]=${postIds.join(",")}&search[user_id]=${userId}`).done(
+		function (favedPostsJson) {
 			console.log("favedPostsJson:", favedPostsJson);
-
-			favedPostIds = getValues(favedPostsJson, "id");
+			
+			favedPostIds = getValues(favedPostsJson, "post_id");
 			console.log("favedPostIds:", favedPostIds);
 		}
 	);
@@ -72,24 +77,6 @@ function fadePosts() {
 			$(this).fadeTo(0, 0.15);
 		});
 	}
-}
-
-function getObjects(obj, key, val) {
-	var objects = [];
-	for (var i in obj) {
-		if (!obj.hasOwnProperty(i)) continue;
-		if (typeof obj[i] == "object") {
-			objects = objects.concat(getObjects(obj[i], key, val));
-		} else
-			if (i == key && obj[i].indexOf(val) !== -1 || i == key && val == "") {
-				objects.push(obj);
-			} else if (obj[i] == val && key == ""){
-				if (objects.lastIndexOf(obj) == -1){
-					objects.push(obj);
-				}
-			}
-	}
-	return objects;
 }
 
 function getValues(obj, key) {
